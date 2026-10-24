@@ -183,7 +183,7 @@
         <section>
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold tracking-tight">Directorio de Especialistas</h2>
-                <span class="text-xs font-semibold text-zinc-500">Auto-guardado activo en Google Sheets</span>
+                <span class="text-xs font-semibold text-zinc-500">Haz clic en "Guardar cambios" en cada tarjeta</span>
             </div>
             <div id="doctorsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Se genera dinámicamente desde JavaScript -->
@@ -233,10 +233,8 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // URL de Google Apps Script del usuario
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcWYByuphEVPZ-5SJeiOe-20gYE11lLIqblYNEA7ZPPpB41hQr5o0KwiRaB9iuEP8/exec';
 
-        // Lista Inicial de Doctores de CAVELI Pochutla
         const initialDoctors = [
             { id: "doc_1", name: "Dr. Balbino Jesús Cano Pérez", spec: "Medicina General, Niños y Adultos", angle: "Atención primaria, chequeos preventivos y derivación oportuna de pacientes." },
             { id: "doc_2", name: "Dr. José Alberto Pérez Valenzuela", spec: "Ginecología, Obstetricia y Colposcopía", angle: "Salud integral de la mujer, control prenatal y diagnóstico ginecológico." },
@@ -257,7 +255,6 @@
         let doctorsData = {};
         let activeFilter = 'ALL';
 
-        // Inicialización
         document.addEventListener('DOMContentLoaded', () => {
             loadLocalData();
             renderDoctors();
@@ -265,7 +262,6 @@
             fetchGoogleSheetsData();
         });
 
-        // Cargar datos guardados localmente
         function loadLocalData() {
             const saved = localStorage.getItem('caveli_crm_data');
             if (saved) {
@@ -281,13 +277,11 @@
             }
         }
 
-        // Guardar localmente
         function saveLocalData() {
             localStorage.setItem('caveli_crm_data', JSON.stringify(doctorsData));
             updateKPIs();
         }
 
-        // Obtener datos remotos desde Google Sheets
         async function fetchGoogleSheetsData() {
             const syncBadge = document.getElementById('syncStatus');
             try {
@@ -297,7 +291,7 @@
                     const data = await response.json();
                     if (Array.isArray(data) && data.length > 0) {
                         data.forEach(row => {
-                            const docId = row[0]; // ID
+                            const docId = row[0];
                             if (docId) {
                                 doctorsData[docId] = {
                                     phone: row[3] || "",
@@ -319,35 +313,6 @@
             }
         }
 
-        // Enviar actualización individual a Google Sheets
-        async function syncToGoogleSheets(docId) {
-            const doc = initialDoctors.find(d => d.id === docId);
-            const state = doctorsData[docId] || { phone: "", status: "Pendiente", notes: "" };
-            
-            saveLocalData();
-
-            const payload = {
-                id: doc.id,
-                doctor: doc.name,
-                especialidad: doc.spec,
-                telefono: state.phone,
-                estatus: state.status,
-                notas: state.notes
-            };
-
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.error("Error al sincronizar con Google Sheets:", e);
-            }
-        }
-
-        // Renderizar Tarjetas de Médicos
         function renderDoctors() {
             const grid = document.getElementById('doctorsGrid');
             grid.innerHTML = '';
@@ -355,12 +320,10 @@
             initialDoctors.forEach(doc => {
                 const state = doctorsData[doc.id] || { phone: "", status: "Pendiente", notes: "" };
                 
-                // Aplicar Filtro de estado
                 if (activeFilter !== 'ALL' && state.status !== activeFilter) {
                     return;
                 }
 
-                // Determinar clase de resaltado según estatus
                 let highlightClass = "";
                 if (state.status === "Cita Agendada") highlightClass = "card-highlight-cita";
                 else if (state.status === "Trato Cerrado") highlightClass = "card-highlight-cerrado";
@@ -381,8 +344,8 @@
                             <div class="mb-3">
                                 <label class="block text-[11px] font-bold text-zinc-600 mb-1">📞 Teléfono / Contacto Directo:</label>
                                 <input type="tel" 
+                                    id="phone_${doc.id}"
                                     value="${state.phone}" 
-                                    onchange="updatePhone('${doc.id}', this.value)" 
                                     placeholder="Ej. 958 123 4567" 
                                     class="w-full bento-input px-3 py-1.5 font-medium text-zinc-800">
                             </div>
@@ -396,7 +359,7 @@
                             <!-- SELECTOR DE ESTATUS -->
                             <div>
                                 <label class="block text-[11px] font-bold text-zinc-600 mb-1">Estatus del Prospecto:</label>
-                                <select onchange="updateStatus('${doc.id}', this.value)" class="w-full bento-select px-3 py-1.5 font-bold">
+                                <select id="status_${doc.id}" onchange="previewStatusChange('${doc.id}', this.value)" class="w-full bento-select px-3 py-1.5 font-bold">
                                     <option value="Pendiente" ${state.status === 'Pendiente' ? 'selected' : ''}>⏳ Pendiente</option>
                                     <option value="En Contacto" ${state.status === 'En Contacto' ? 'selected' : ''}>📞 En Contacto</option>
                                     <option value="Cita Agendada" ${state.status === 'Cita Agendada' ? 'selected' : ''}>📅 Cita Agendada</option>
@@ -409,11 +372,16 @@
                             <div>
                                 <label class="block text-[11px] font-bold text-zinc-600 mb-1">Notas / Bitácora:</label>
                                 <textarea 
-                                    onchange="updateNotes('${doc.id}', this.value)" 
+                                    id="notes_${doc.id}"
                                     placeholder="Escribe acuerdos, hora de llamada o detalles de la cita..." 
                                     rows="2" 
                                     class="w-full bento-input p-2 text-xs font-medium resize-none">${state.notes}</textarea>
                             </div>
+
+                            <!-- BOTÓN DEDICADO DE GUARDADO POR TARJETA -->
+                            <button id="btn_save_${doc.id}" onclick="saveCardData('${doc.id}')" class="w-full bento-btn bg-zinc-900 text-white hover:bg-[#ff6b52] hover:text-white py-2 px-3 text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                                💾 Guardar Cambios
+                            </button>
                         </div>
                     </div>
                 `;
@@ -421,35 +389,82 @@
             });
         }
 
-        // Actualizar Teléfono
-        function updatePhone(docId, val) {
-            if (!doctorsData[docId]) doctorsData[docId] = {};
-            doctorsData[docId].phone = val;
-            syncToGoogleSheets(docId);
+        // Vista previa inmediata del color al cambiar el estatus en el dropdown
+        function previewStatusChange(docId, newStatus) {
+            const card = document.getElementById(`card_${docId}`);
+            card.classList.remove('card-highlight-cita', 'card-highlight-cerrado', 'card-highlight-rechazado');
+            
+            if (newStatus === "Cita Agendada") card.classList.add('card-highlight-cita');
+            else if (newStatus === "Trato Cerrado") card.classList.add('card-highlight-cerrado');
+            else if (newStatus === "Rechazado") card.classList.add('card-highlight-rechazado');
         }
 
-        // Actualizar Estatus
-        function updateStatus(docId, val) {
-            if (!doctorsData[docId]) doctorsData[docId] = {};
-            doctorsData[docId].status = val;
-            renderDoctors();
-            syncToGoogleSheets(docId);
+        // Función principal del botón "Guardar Cambios" por tarjeta
+        async function saveCardData(docId) {
+            const btn = document.getElementById(`btn_save_${docId}`);
+            const phoneVal = document.getElementById(`phone_${docId}`).value;
+            const statusVal = document.getElementById(`status_${docId}`).value;
+            const notesVal = document.getElementById(`notes_${docId}`).value;
+
+            // Actualización de estado en memoria
+            doctorsData[docId] = {
+                phone: phoneVal,
+                status: statusVal,
+                notes: notesVal
+            };
+
+            // Guardar en localStorage inmediatamente
+            saveLocalData();
+
+            // Feedback visual de guardando
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = `⏳ Guardando...`;
+            btn.disabled = true;
+
+            const doc = initialDoctors.find(d => d.id === docId);
+            const payload = {
+                id: doc.id,
+                doctor: doc.name,
+                especialidad: doc.spec,
+                telefono: phoneVal,
+                estatus: statusVal,
+                notas: notesVal
+            };
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                btn.innerHTML = `✅ ¡Guardado!`;
+                btn.classList.remove('bg-zinc-900');
+                btn.classList.add('bg-emerald-600', 'text-white');
+
+                setTimeout(() => {
+                    btn.innerHTML = originalBtnText;
+                    btn.classList.remove('bg-emerald-600');
+                    btn.classList.add('bg-zinc-900');
+                    btn.disabled = false;
+                }, 2000);
+
+            } catch (e) {
+                console.error("Error al guardar en Google Sheets:", e);
+                btn.innerHTML = `⚠️ Guardado solo local`;
+                setTimeout(() => {
+                    btn.innerHTML = originalBtnText;
+                    btn.disabled = false;
+                }, 2000);
+            }
         }
 
-        // Actualizar Notas
-        function updateNotes(docId, val) {
-            if (!doctorsData[docId]) doctorsData[docId] = {};
-            doctorsData[docId].notes = val;
-            syncToGoogleSheets(docId);
-        }
-
-        // Filtro por botones
         function setFilter(filterType) {
             activeFilter = filterType;
             renderDoctors();
         }
 
-        // Búsqueda por texto
         function filterDoctors() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cards = document.querySelectorAll('#doctorsGrid > div');
@@ -464,7 +479,6 @@
             });
         }
 
-        // Actualizar Métricas KPIs
         function updateKPIs() {
             let pendientes = 0, contacto = 0, citas = 0, cerrados = 0, rechazados = 0;
 
@@ -484,7 +498,6 @@
             document.getElementById('kpiRechazados').innerText = rechazados;
         }
 
-        // Recargar datos manualmente
         function refreshData() {
             fetchGoogleSheetsData();
         }
