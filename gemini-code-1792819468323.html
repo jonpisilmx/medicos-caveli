@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Comercial & CRM | Grupo Médico CAVELI Pochutla</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #f4f4f0;
+            --card-bg: #ffffff;
+            --border-color: #18181b;
+            --accent-coral: #ff6b52;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-gray: #6b7280;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            font-family: 'Inter', sans-serif;
+            color: #18181b;
+        }
+
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Estilo Neo-Brutalista / Bento Box */
+        .bento-card {
+            background-color: var(--card-bg);
+            border: 2.5px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 4px 4px 0px var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .bento-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 6px 6px 0px var(--border-color);
+        }
+
+        .bento-btn {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 3px 3px 0px var(--border-color);
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+
+        .bento-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--border-color);
+        }
+
+        .bento-input, .bento-select {
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background-color: #fcfcf9;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .bento-input:focus, .bento-select:focus {
+            outline: none;
+            background-color: #ffffff;
+            border-color: var(--accent-coral);
+        }
+
+        /* Estados Dinámicos de Tarjeta */
+        .card-highlight-cita {
+            background-color: #fff5f3 !important;
+            border-color: var(--accent-coral) !important;
+            box-shadow: 5px 5px 0px var(--accent-coral) !important;
+        }
+
+        .card-highlight-cerrado {
+            background-color: #ecfdf5 !important;
+            border-color: var(--accent-green) !important;
+            box-shadow: 5px 5px 0px var(--accent-green) !important;
+        }
+
+        .card-highlight-rechazado {
+            background-color: #f3f4f6 !important;
+            border-color: #9ca3af !important;
+            box-shadow: 3px 3px 0px #9ca3af !important;
+            opacity: 0.65;
+            filter: grayscale(80%);
+        }
+
+        .card-highlight-rechazado:hover {
+            opacity: 0.9;
+            filter: grayscale(0%);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e5e5e0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #18181b;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+
+        <!-- HEADER PRINCIPAL -->
+        <header class="bento-card p-6 md:p-8 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <div class="inline-block bg-[#ff6b52] text-white text-xs font-bold px-3 py-1 rounded-full border border-black mb-2 uppercase tracking-wider">
+                    Estrategia Comercial 2026
+                </div>
+                <h1 class="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900">
+                    CAVELI <span class="text-[#ff6b52]">Pochutla</span>
+                </h1>
+                <p class="text-zinc-600 font-medium mt-1">
+                    Guía de Abordaje & Dashboard CRM en Tiempo Real
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <span id="syncStatus" class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border-2 border-black bg-emerald-100 text-emerald-800">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Sincronizado con Google Sheets
+                </span>
+                <button onclick="refreshData()" class="bento-btn bg-white hover:bg-zinc-100 px-4 py-2 text-xs font-bold uppercase tracking-wider">
+                    🔄 Actualizar Datos
+                </button>
+            </div>
+        </header>
+
+        <!-- DASHBOARD DE METRICAS (BENTO GRID KPI) -->
+        <section class="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div class="bento-card p-4 text-center bg-white">
+                <p class="text-xs font-bold uppercase text-zinc-500">Total Médicos</p>
+                <p id="kpiTotal" class="text-3xl font-black mt-1">14</p>
+            </div>
+            <div class="bento-card p-4 text-center bg-amber-50">
+                <p class="text-xs font-bold uppercase text-amber-700">Pendientes</p>
+                <p id="kpiPendientes" class="text-3xl font-black text-amber-600 mt-1">0</p>
+            </div>
+            <div class="bento-card p-4 text-center bg-blue-50">
+                <p class="text-xs font-bold uppercase text-blue-700">En Contacto</p>
+                <p id="kpiContacto" class="text-3xl font-black text-blue-600 mt-1">0</p>
+            </div>
+            <div class="bento-card p-4 text-center bg-orange-100 border-[#ff6b52]">
+                <p class="text-xs font-bold uppercase text-orange-800">Citas Agendadas</p>
+                <p id="kpiCitas" class="text-3xl font-black text-[#ff6b52] mt-1">0</p>
+            </div>
+            <div class="bento-card p-4 text-center bg-emerald-100 border-emerald-600">
+                <p class="text-xs font-bold uppercase text-emerald-800">Cerrados</p>
+                <p id="kpiCerrados" class="text-3xl font-black text-emerald-600 mt-1">0</p>
+            </div>
+            <div class="bento-card p-4 text-center bg-zinc-200">
+                <p class="text-xs font-bold uppercase text-zinc-600">Rechazados</p>
+                <p id="kpiRechazados" class="text-3xl font-black text-zinc-600 mt-1">0</p>
+            </div>
+        </section>
+
+        <!-- FILTROS Y BÚSQUEDA -->
+        <section class="bento-card p-4 bg-white flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="relative w-full md:w-96">
+                <input type="text" id="searchInput" onkeyup="filterDoctors()" placeholder="Buscar doctor o especialidad..." class="w-full bento-input px-4 py-2.5 pl-10 font-medium">
+                <span class="absolute left-3 top-3 text-zinc-400">🔍</span>
+            </div>
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <button onclick="setFilter('ALL')" class="filter-btn bento-btn bg-zinc-900 text-white px-3 py-1.5 text-xs">Todos</button>
+                <button onclick="setFilter('Pendiente')" class="filter-btn bento-btn bg-white hover:bg-zinc-100 px-3 py-1.5 text-xs">Pendientes</button>
+                <button onclick="setFilter('Cita Agendada')" class="filter-btn bento-btn bg-white hover:bg-zinc-100 px-3 py-1.5 text-xs">Citas</button>
+                <button onclick="setFilter('Trato Cerrado')" class="filter-btn bento-btn bg-white hover:bg-zinc-100 px-3 py-1.5 text-xs">Cerrados</button>
+                <button onclick="setFilter('Rechazado')" class="filter-btn bento-btn bg-white hover:bg-zinc-100 px-3 py-1.5 text-xs">Rechazados</button>
+            </div>
+        </section>
+
+        <!-- DIRECTORIO DE MEDICOS (CARDS GRID) -->
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold tracking-tight">Directorio de Especialistas</h2>
+                <span class="text-xs font-semibold text-zinc-500">Auto-guardado activo en Google Sheets</span>
+            </div>
+            <div id="doctorsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Se genera dinámicamente desde JavaScript -->
+            </div>
+        </section>
+
+        <!-- FLUJO COMERCIAL PASO A PASO -->
+        <section class="bento-card p-6 md:p-8 bg-white">
+            <h2 class="text-2xl font-bold tracking-tight mb-6 flex items-center gap-3">
+                <span class="bg-[#ff6b52] text-white p-2 rounded-xl text-lg">🚀</span> Flujo Comercial de Cierre en 6 Pasos
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="border-2 border-black rounded-xl p-4 bg-zinc-50">
+                    <span class="bg-black text-white text-xs font-bold px-2 py-1 rounded">PASO 1</span>
+                    <h3 class="font-bold text-lg mt-2">Mapeo & Preparación</h3>
+                    <p class="text-xs text-zinc-600 mt-1">Revisa la especialidad y define la propuesta de valor o solución concreta antes de llamar.</p>
+                </div>
+                <div class="border-2 border-black rounded-xl p-4 bg-zinc-50">
+                    <span class="bg-black text-white text-xs font-bold px-2 py-1 rounded">PASO 2</span>
+                    <h3 class="font-bold text-lg mt-2">Primer Contacto</h3>
+                    <p class="text-xs text-zinc-600 mt-1">Llama al número directo o recepción. Solicita un espacio breve de 5 minutos con el médico.</p>
+                </div>
+                <div class="border-2 border-black rounded-xl p-4 bg-zinc-50">
+                    <span class="bg-black text-white text-xs font-bold px-2 py-1 rounded">PASO 3</span>
+                    <h3 class="font-bold text-lg mt-2">Pitch Ejecutivo</h3>
+                    <p class="text-xs text-zinc-600 mt-1">Aplica la fórmula: Empatía (30s) + Problema/Solución (2 min) + Pregunta de validación.</p>
+                </div>
+                <div class="border-2 border-black rounded-xl p-4 bg-zinc-50">
+                    <span class="bg-black text-white text-xs font-bold px-2 py-1 rounded">PASO 4</span>
+                    <h3 class="font-bold text-lg mt-2">Envío de Propuesta</h3>
+                    <p class="text-xs text-zinc-600 mt-1">Envía propuesta ejecutiva (máximo 2 páginas) e inicia la cadencia de seguimiento.</p>
+                </div>
+                <div class="border-2 border-black rounded-xl p-4 bg-zinc-50">
+                    <span class="bg-black text-white text-xs font-bold px-2 py-1 rounded">PASO 5</span>
+                    <h3 class="font-bold text-lg mt-2">Manejo de Objeciones</h3>
+                    <p class="text-xs text-zinc-600 mt-1">Resuelve objeciones de tiempo o costo enfocando la conversación en el retorno de inversión.</p>
+                </div>
+                <div class="border-2 border-black rounded-xl p-4 bg-zinc-50">
+                    <span class="bg-black text-white text-xs font-bold px-2 py-1 rounded">PASO 6</span>
+                    <h3 class="font-bold text-lg mt-2">Cierre & Referidos</h3>
+                    <p class="text-xs text-zinc-600 mt-1">Firma del acuerdo, alta en sistema y solicitud de recomendación dentro del colectivo CAVELI.</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // URL de Google Apps Script del usuario
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcWYByuphEVPZ-5SJeiOe-20gYE11lLIqblYNEA7ZPPpB41hQr5o0KwiRaB9iuEP8/exec';
+
+        // Lista Inicial de Doctores de CAVELI Pochutla
+        const initialDoctors = [
+            { id: "doc_1", name: "Dr. Balbino Jesús Cano Pérez", spec: "Medicina General, Niños y Adultos", angle: "Atención primaria, chequeos preventivos y derivación oportuna de pacientes." },
+            { id: "doc_2", name: "Dr. José Alberto Pérez Valenzuela", spec: "Ginecología, Obstetricia y Colposcopía", angle: "Salud integral de la mujer, control prenatal y diagnóstico ginecológico." },
+            { id: "doc_3", name: "Dr. Marco Antonio Pérez Elizarraras", spec: "Ultrasonografista, Cirujano y Partero", angle: "Estudios de imagen de alta precisión y procedimientos quirúrgicos generales." },
+            { id: "doc_4", name: "Dr. Fernando Jorge Abaroa Cantú", spec: "Dermatología Clínica y Estética", angle: "Tratamientos avanzados de piel, dermatología médica y procedimientos estéticos." },
+            { id: "doc_5", name: "Dr. Erlin Esaú López Hernández", spec: "Traumatología, Ortopedia y Artroscopia", angle: "Lesiones articulares, cirugía ortopédica y recuperación funcional." },
+            { id: "doc_6", name: "Dra. Pamela Pérez Rivera", spec: "Medicina Estética y Antienvejecimiento", angle: "Armonización facial, tratamientos de rejuvenecimiento y cuidado estético integral." },
+            { id: "doc_7", name: "Dra. Edna Muñoz Aizpuru", spec: "Cirugía Plástica y Reconstructiva", angle: "Procedimientos quirúrgicos estéticos y reconstructivos de alta especialidad." },
+            { id: "doc_8", name: "Dr. Diego Quillo Olvera", spec: "Neurocirugía y Columna de Míni Invasión", angle: "Cirugía neurológica de mínima invasión y tratamiento integral de columna." },
+            { id: "doc_9", name: "Dr. Glanz Schwer Azua Díaz", spec: "Anestesiología y Medicina del Dolor", angle: "Manejo del dolor crónico, procedimientos anestésicos y alivio sintomático." },
+            { id: "doc_10", name: "Dr. Sergio Meza Vargas", spec: "Bariatría Clínica", angle: "Tratamiento médico del sobrepeso, obesidad y salud metabólica integral." },
+            { id: "doc_11", name: "Lic. Dayana J. García Ramos", spec: "Rayos X a Domicilio", angle: "Servicio de radiografía portátil y diagnóstico oportuno en hogar u oficina." },
+            { id: "doc_12", name: "Lic. Carlos Moreno Cortés", spec: "Psicología Clínica", angle: "Atención psicoterapéutica, evaluación emocional y salud mental." },
+            { id: "doc_13", name: "Lic. Claudia Alberto Olivera", spec: "Nutrición Clínica", angle: "Planes de alimentación personalizados, nutrición médica y control metabólico." },
+            { id: "doc_14", name: "Lic. Karla Yael García Paz", spec: "Terapia Física y Rehabilitación", angle: "Rehabilitación física, fisioterapia deportiva y recuperación postquirúrgica." }
+        ];
+
+        let doctorsData = {};
+        let activeFilter = 'ALL';
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLocalData();
+            renderDoctors();
+            updateKPIs();
+            fetchGoogleSheetsData();
+        });
+
+        // Cargar datos guardados localmente
+        function loadLocalData() {
+            const saved = localStorage.getItem('caveli_crm_data');
+            if (saved) {
+                doctorsData = JSON.parse(saved);
+            } else {
+                initialDoctors.forEach(doc => {
+                    doctorsData[doc.id] = {
+                        phone: "",
+                        status: "Pendiente",
+                        notes: ""
+                    };
+                });
+            }
+        }
+
+        // Guardar localmente
+        function saveLocalData() {
+            localStorage.setItem('caveli_crm_data', JSON.stringify(doctorsData));
+            updateKPIs();
+        }
+
+        // Obtener datos remotos desde Google Sheets
+        async function fetchGoogleSheetsData() {
+            const syncBadge = document.getElementById('syncStatus');
+            try {
+                syncBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span> Sincronizando...`;
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(row => {
+                            const docId = row[0]; // ID
+                            if (docId) {
+                                doctorsData[docId] = {
+                                    phone: row[3] || "",
+                                    status: row[4] || "Pendiente",
+                                    notes: row[5] || ""
+                                };
+                            }
+                        });
+                        saveLocalData();
+                        renderDoctors();
+                    }
+                    syncBadge.className = "inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border-2 border-black bg-emerald-100 text-emerald-800";
+                    syncBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Conectado a Google Sheets`;
+                }
+            } catch (err) {
+                console.warn("Sincronización remota pendiente:", err);
+                syncBadge.className = "inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border-2 border-black bg-amber-100 text-amber-800";
+                syncBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Modo Local (Offline)`;
+            }
+        }
+
+        // Enviar actualización individual a Google Sheets
+        async function syncToGoogleSheets(docId) {
+            const doc = initialDoctors.find(d => d.id === docId);
+            const state = doctorsData[docId] || { phone: "", status: "Pendiente", notes: "" };
+            
+            saveLocalData();
+
+            const payload = {
+                id: doc.id,
+                doctor: doc.name,
+                especialidad: doc.spec,
+                telefono: state.phone,
+                estatus: state.status,
+                notas: state.notes
+            };
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                console.error("Error al sincronizar con Google Sheets:", e);
+            }
+        }
+
+        // Renderizar Tarjetas de Médicos
+        function renderDoctors() {
+            const grid = document.getElementById('doctorsGrid');
+            grid.innerHTML = '';
+
+            initialDoctors.forEach(doc => {
+                const state = doctorsData[doc.id] || { phone: "", status: "Pendiente", notes: "" };
+                
+                // Aplicar Filtro de estado
+                if (activeFilter !== 'ALL' && state.status !== activeFilter) {
+                    return;
+                }
+
+                // Determinar clase de resaltado según estatus
+                let highlightClass = "";
+                if (state.status === "Cita Agendada") highlightClass = "card-highlight-cita";
+                else if (state.status === "Trato Cerrado") highlightClass = "card-highlight-cerrado";
+                else if (state.status === "Rechazado") highlightClass = "card-highlight-rechazado";
+
+                const cardHtml = `
+                    <div id="card_${doc.id}" class="bento-card p-5 bg-white flex flex-col justify-between space-y-4 ${highlightClass}">
+                        <div>
+                            <div class="flex justify-between items-start gap-2 mb-2">
+                                <h3 class="font-bold text-base text-zinc-900 leading-snug">${doc.name}</h3>
+                                <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded border border-black bg-zinc-100">
+                                    ${doc.id.replace('doc_', 'ID #')}
+                                </span>
+                            </div>
+                            <p class="text-xs font-semibold text-[#ff6b52] mb-3">${doc.spec}</p>
+
+                            <!-- CAMPO DE TELÉFONO DEDICADO -->
+                            <div class="mb-3">
+                                <label class="block text-[11px] font-bold text-zinc-600 mb-1">📞 Teléfono / Contacto Directo:</label>
+                                <input type="tel" 
+                                    value="${state.phone}" 
+                                    onchange="updatePhone('${doc.id}', this.value)" 
+                                    placeholder="Ej. 958 123 4567" 
+                                    class="w-full bento-input px-3 py-1.5 font-medium text-zinc-800">
+                            </div>
+
+                            <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-2.5 mb-3">
+                                <p class="text-[11px] text-zinc-600"><span class="font-bold text-zinc-800">Ángulo Comercial:</span> ${doc.angle}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 pt-2 border-t border-zinc-200">
+                            <!-- SELECTOR DE ESTATUS -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-zinc-600 mb-1">Estatus del Prospecto:</label>
+                                <select onchange="updateStatus('${doc.id}', this.value)" class="w-full bento-select px-3 py-1.5 font-bold">
+                                    <option value="Pendiente" ${state.status === 'Pendiente' ? 'selected' : ''}>⏳ Pendiente</option>
+                                    <option value="En Contacto" ${state.status === 'En Contacto' ? 'selected' : ''}>📞 En Contacto</option>
+                                    <option value="Cita Agendada" ${state.status === 'Cita Agendada' ? 'selected' : ''}>📅 Cita Agendada</option>
+                                    <option value="Trato Cerrado" ${state.status === 'Trato Cerrado' ? 'selected' : ''}>🎉 Trato Cerrado</option>
+                                    <option value="Rechazado" ${state.status === 'Rechazado' ? 'selected' : ''}>❌ Rechazado</option>
+                                </select>
+                            </div>
+
+                            <!-- CAMPO DE NOTAS -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-zinc-600 mb-1">Notas / Bitácora:</label>
+                                <textarea 
+                                    onchange="updateNotes('${doc.id}', this.value)" 
+                                    placeholder="Escribe acuerdos, hora de llamada o detalles de la cita..." 
+                                    rows="2" 
+                                    class="w-full bento-input p-2 text-xs font-medium resize-none">${state.notes}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHtml;
+            });
+        }
+
+        // Actualizar Teléfono
+        function updatePhone(docId, val) {
+            if (!doctorsData[docId]) doctorsData[docId] = {};
+            doctorsData[docId].phone = val;
+            syncToGoogleSheets(docId);
+        }
+
+        // Actualizar Estatus
+        function updateStatus(docId, val) {
+            if (!doctorsData[docId]) doctorsData[docId] = {};
+            doctorsData[docId].status = val;
+            renderDoctors();
+            syncToGoogleSheets(docId);
+        }
+
+        // Actualizar Notas
+        function updateNotes(docId, val) {
+            if (!doctorsData[docId]) doctorsData[docId] = {};
+            doctorsData[docId].notes = val;
+            syncToGoogleSheets(docId);
+        }
+
+        // Filtro por botones
+        function setFilter(filterType) {
+            activeFilter = filterType;
+            renderDoctors();
+        }
+
+        // Búsqueda por texto
+        function filterDoctors() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('#doctorsGrid > div');
+            
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        // Actualizar Métricas KPIs
+        function updateKPIs() {
+            let pendientes = 0, contacto = 0, citas = 0, cerrados = 0, rechazados = 0;
+
+            Object.values(doctorsData).forEach(item => {
+                if (item.status === 'Pendiente') pendientes++;
+                else if (item.status === 'En Contacto') contacto++;
+                else if (item.status === 'Cita Agendada') citas++;
+                else if (item.status === 'Trato Cerrado') cerrados++;
+                else if (item.status === 'Rechazado') rechazados++;
+            });
+
+            document.getElementById('kpiTotal').innerText = initialDoctors.length;
+            document.getElementById('kpiPendientes').innerText = pendientes;
+            document.getElementById('kpiContacto').innerText = contacto;
+            document.getElementById('kpiCitas').innerText = citas;
+            document.getElementById('kpiCerrados').innerText = cerrados;
+            document.getElementById('kpiRechazados').innerText = rechazados;
+        }
+
+        // Recargar datos manualmente
+        function refreshData() {
+            fetchGoogleSheetsData();
+        }
+    </script>
+</body>
+</html>
